@@ -1,0 +1,292 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="{% static 'Icon.jpg' %}">
+    <title>Магазин товаров</title>
+    <!-- UIKit CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/uikit@3.17.11/dist/css/uikit.min.css" />
+    <!-- UIKit JS -->
+    <script src="https://cdn.jsdelivr.net/npm/uikit@3.17.11/dist/js/uikit.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/uikit@3.17.11/dist/js/uikit-icons.min.js"></script>
+</head>
+<body>
+
+<div class="uk-container uk-margin-top">
+    <!-- Навигационная панель -->
+    <nav class="uk-navbar-container uk-margin-bottom" uk-navbar>
+        <div class="uk-navbar-left">
+            <img src="{% static 'Logo.png' %}" alt="Логотип" style="height: 50px;">
+        </div>
+
+        <div class="uk-navbar-center">
+            <ul class="uk-navbar-nav">
+                <li class="uk-active"><a href="{% url 'main_page' %}">Главная</a></li>
+            </ul>
+        </div>
+
+        <div class="uk-navbar-right">
+            <div class="uk-navbar-item">
+                {% if user_role %}
+                    <div class="uk-flex uk-flex-middle">
+                        <span class="uk-text-small uk-margin-right">
+                            {% if user_role == 'Администратор' %}
+                                <span uk-icon="settings" class="uk-margin-small-right"></span>
+                            {% elif user_role == 'Менеджер' %}
+                                <span uk-icon="users" class="uk-margin-small-right"></span>
+                            {% elif user_role == 'Авторизированный клиент' %}
+                                <span uk-icon="user" class="uk-margin-small-right"></span>
+                            {% endif %}
+                            {{ user_name }} ({{ user_role }})
+                        </span>
+                        <a href="{% url 'logout' %}" class="uk-button uk-button-small uk-button-default">
+                            <span uk-icon="sign-out"></span> Выйти
+                        </a>
+                    </div>
+                {% else %}
+                    <div class="uk-flex uk-flex-middle">
+                        <span uk-icon="user" class="uk-margin-small-right"></span>
+                        <span class="uk-text-small uk-margin-right">Гость</span>
+                        <a href="{% url 'login' %}" class="uk-button uk-button-small uk-button-primary">
+                            <span uk-icon="sign-in"></span> Войти
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+    <!-- Заголовок в зависимости от роли -->
+    <div class="uk-text-center uk-margin-bottom">
+        {% if user_role == 'Администратор' %}
+            <h1 class="uk-heading-small">Панель администратора</h1>
+            <div class="uk-alert-primary" uk-alert>
+                <p>У вас есть полный доступ к управлению товарами и пользователями.</p>
+            </div>
+        {% elif user_role == 'Менеджер' %}
+            <h1 class="uk-heading-small">Панель менеджера</h1>
+            <div class="uk-alert-success" uk-alert>
+                <p>Вы можете управлять товарами и просматривать заказы.</p>
+            </div>
+        {% elif user_role == 'Авторизированный клиент' %}
+            <h1 class="uk-heading-small">Личный кабинет клиента</h1>
+            <div class="uk-alert" uk-alert>
+                <p>Добро пожаловать в ваш личный кабинет. Здесь вы можете просматривать товары и делать заказы.</p>
+            </div>
+        {% else %}
+            <h1 class="uk-heading-small">Каталог товаров</h1>
+            <div class="uk-alert" uk-alert>
+                <p>Вы вошли как гость. <a href="{% url 'login' %}">Войдите</a> для получения дополнительных возможностей.</p>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Форма поиска и сортировки (только для администратора и менеджера) -->
+    {% if user_role == 'Администратор' or user_role == 'Менеджер' %}
+    <div class="uk-margin-medium-top uk-margin-medium-bottom">
+        <form method="get" class="uk-grid-small" uk-grid>
+            <div class="uk-width-1-2@s">
+                <input class="uk-input" type="text" name="q" placeholder="Поиск товара" value="{{ request.GET.q }}">
+            </div>
+            <div class="uk-width-1-4@s">
+                <select class="uk-select" name="sort">
+                    <option value="" {% if not request.GET.sort %}selected{% endif %}>Без сортировки</option>
+                    <option value="asc" {% if request.GET.sort == 'asc' %}selected{% endif %}>Склад по возрастанию</option>
+                    <option value="desc" {% if request.GET.sort == 'desc' %}selected{% endif %}>Склад по убыванию</option>
+                </select>
+            </div>
+            <div class="uk-width-1-4@s">
+                <button class="uk-button uk-button-primary" type="submit">
+                    <span uk-icon="search"></span> Найти
+                </button>
+            </div>
+        </form>
+    </div>
+    {% endif %}
+
+    <!-- Административные функции (видны только администратору) -->
+    {% if user_role == 'Администратор' %}
+    <div class="uk-margin-medium-bottom">
+        <div class="uk-grid-small" uk-grid>
+            <div class="uk-width-auto">
+                <a href="#" class="uk-button uk-button-primary">
+                    <span uk-icon="plus"></span> Добавить товар
+                </a>
+            </div>
+            <div class="uk-width-auto">
+                <a href="#" class="uk-button uk-button-default">
+                    <span uk-icon="users"></span> Управление пользователями
+                </a>
+            </div>
+            <div class="uk-width-auto">
+                <a href="#" class="uk-button uk-button-default">
+                    <span uk-icon="list"></span> Все заказы
+                </a>
+            </div>
+            <div class="uk-width-auto">
+                <a href="#" class="uk-button uk-button-default">
+                    <span uk-icon="tag"></span> Категории
+                </a>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Функции менеджера (видны менеджеру) -->
+    {% if user_role == 'Менеджер' %}
+    <div class="uk-margin-medium-bottom">
+        <div class="uk-grid-small" uk-grid>
+            <div class="uk-width-auto">
+                <a href="#" class="uk-button uk-button-primary">
+                    <span uk-icon="plus"></span> Добавить товар
+                </a>
+            </div>
+            <div class="uk-width-auto">
+                <a href="#" class="uk-button uk-button-default">
+                    <span uk-icon="list"></span> Заказы
+                </a>
+            </div>
+            <div class="uk-width-auto">
+                <a href="#" class="uk-button uk-button-default">
+                    <span uk-icon="file-edit"></span> Отчеты
+                </a>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Функции клиента (видны только авторизованным клиентам) -->
+    {% if user_role == 'Авторизированный клиент' %}
+    <div class="uk-margin-medium-bottom">
+        <div class="uk-grid-small" uk-grid>
+            <div class="uk-width-auto">
+                <a href="#" class="uk-button uk-button-primary">
+                    <span uk-icon="cart"></span> Мои заказы
+                </a>
+            </div>
+            <div class="uk-width-auto">
+                <a href="#" class="uk-button uk-button-default">
+                    <span uk-icon="heart"></span> Избранное
+                </a>
+            </div>
+            <div class="uk-width-auto">
+                <a href="#" class="uk-button uk-button-default">
+                    <span uk-icon="user"></span> Профиль
+                </a>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Информация для клиентов и гостей о количестве товаров -->
+    {% if user_role == 'Авторизированный клиент' or not user_role %}
+    <div class="uk-margin-medium-bottom">
+        <div class="uk-card uk-card-default uk-card-body uk-background-muted">
+            <div class="uk-grid-small uk-flex-middle" uk-grid>
+                <div class="uk-width-auto">
+                    <span uk-icon="icon: grid; ratio: 2"></span>
+                </div>
+                <div class="uk-width-expand">
+                    <h3 class="uk-card-title uk-margin-remove-bottom">Каталог товаров</h3>
+                    <p class="uk-text-meta uk-margin-remove-top">
+                        Всего товаров в каталоге: {{ products|length }}
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Список товаров (доступен всем) -->
+    <div class="uk-margin-large-top" uk-grid>
+        {% for product in products %}
+        <div class="uk-width-1-2@m uk-width-1-3@l">
+            <div class="uk-card uk-card-default uk-card-hover uk-margin-bottom
+                {% if product.stock == 0 %}uk-card-secondary uk-light{% endif %}
+                {% if product.discount > 15 and user_role != 'Гость' %}uk-card-primary uk-light{% endif %}">
+
+                <div class="uk-card-media-top uk-flex uk-flex-center uk-padding-small">
+                    {% if product.photo %}
+                        <img src="{% static 'products/' %}{{ product.photo }}" alt="{{ product.name }}" style="max-height: 200px; object-fit: contain;">
+                    {% else %}
+                        <!-- Используем picture.png как заглушку -->
+                        <img src="{% static 'picture.png' %}" alt="Нет фото" style="max-height: 200px; object-fit: contain;">
+                    {% endif %}
+                </div>
+
+                <div class="uk-card-body">
+                    <h3 class="uk-card-title">{{ product.category.name }} | {{ product.name }}</h3>
+
+                    <p>
+                        <strong>Описание товара:</strong> {{ product.description|truncatechars:100 }}<br>
+                        <strong>Производитель:</strong> {{ product.manufacturer.name }}<br>
+                        <strong>Поставщик:</strong> {{ product.supplier.name }}<br>
+
+                        <strong>Цена:</strong>
+                        {% if product.discount > 0 %}
+                            <span class="uk-text-muted" style="text-decoration: line-through;">{{ product.price }} ₽</span>
+                            <span class="uk-text-success uk-text-bold">{{ product.final_price }} ₽</span>
+                        {% else %}
+                            {{ product.price }} ₽
+                        {% endif %}
+                        <br>
+
+                        <strong>Ед. измерения:</strong> {{ product.unit }}<br>
+                        <strong>Количество на складе:</strong> {{ product.stock }}
+                    </p>
+
+                    {% if product.discount > 0 %}
+                    <div class="uk-badge uk-position-top-right uk-margin-small-right uk-margin-small-top">
+                        -{{ product.discount }}%
+                    </div>
+                    {% endif %}
+
+                    <!-- Кнопки действий в зависимости от роли -->
+                    <div class="uk-margin-top">
+                        {% if user_role == 'Администратор' or user_role == 'Менеджер' %}
+                            <button class="uk-button uk-button-default uk-button-small">
+                                <span uk-icon="pencil"></span> Редактировать
+                            </button>
+                            <button class="uk-button uk-button-danger uk-button-small">
+                                <span uk-icon="trash"></span> Удалить
+                            </button>
+                        {% elif user_role == 'Авторизированный клиент' %}
+                            {% if product.stock > 0 %}
+                                <button class="uk-button uk-button-primary uk-button-small">
+                                    <span uk-icon="cart"></span> В корзину
+                                </button>
+                                <button class="uk-button uk-button-default uk-button-small">
+                                    <span uk-icon="heart"></span>
+                                </button>
+                            {% else %}
+                                <button class="uk-button uk-button-default uk-button-small" disabled>
+                                    Нет в наличии
+                                </button>
+                            {% endif %}
+                        {% else %}
+                            <!-- Для гостей показываем только просмотр -->
+                            <button class="uk-button uk-button-default uk-button-small">
+                                <span uk-icon="info"></span> Подробнее
+                            </button>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Если товаров нет -->
+    {% if not products %}
+    <div class="uk-text-center uk-margin-large">
+        <div class="uk-alert-warning" uk-alert>
+            <p>Товары не найдены</p>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+</body>
+</html>
