@@ -83,6 +83,14 @@
         {% endif %}
     </div>
 
+    {% if messages %}
+    {% for message in messages %}
+        <div class="uk-alert-{% if message.tags == 'error' %}danger{% else %}success{% endif %}" uk-alert>
+            <p>{{ message }}</p>
+        </div>
+    {% endfor %}
+    {% endif %}
+
     <!-- Форма поиска и сортировки (только для администратора и менеджера) -->
     {% if user_role == 'Администратор' or user_role == 'Менеджер' %}
     <div class="uk-margin-medium-top uk-margin-medium-bottom">
@@ -111,7 +119,7 @@
     <div class="uk-margin-medium-bottom">
         <div class="uk-grid-small" uk-grid>
             <div class="uk-width-auto">
-                <a href="#" class="uk-button uk-button-primary">
+                <a href="{% url 'product_add' %}" class="uk-button uk-button-primary">
                     <span uk-icon="plus"></span> Добавить товар
                 </a>
             </div>
@@ -246,12 +254,18 @@
                     <!-- Кнопки действий в зависимости от роли -->
                     <div class="uk-margin-top">
                         {% if user_role == 'Администратор' or user_role == 'Менеджер' %}
-                            <button class="uk-button uk-button-default uk-button-small">
-                                <span uk-icon="pencil"></span> Редактировать
-                            </button>
-                            <button class="uk-button uk-button-danger uk-button-small">
-                                <span uk-icon="trash"></span> Удалить
-                            </button>
+                             <div class="uk-flex uk-flex-between">
+                                <a href="{% url 'product_edit' product.article %}" class="uk-button uk-button-default uk-button-small">
+                                    <span uk-icon="pencil">Редактировать</span>
+                                </a>
+                                <form method="post" action="{% url 'product_delete' product.article %}"
+                                    onsubmit="return confirm('Удалить товар?');" style="display: inline;">
+                                    {% csrf_token %}
+                                    <button class="uk-button uk-button-danger uk-button-small" type="submit">
+                                        <span uk-icon="trash"></span>
+                                    </button>
+                                </form>
+                            </div>
                         {% elif user_role == 'Авторизированный клиент' %}
                             {% if product.stock > 0 %}
                                 <button class="uk-button uk-button-primary uk-button-small">

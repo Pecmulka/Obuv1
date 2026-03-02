@@ -1,0 +1,152 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="{% static 'Icon.jpg' %}">
+    <title>{% if is_add %}Добавление товара{% else %}Редактирование{% endif %}</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/uikit@3.17.11/dist/css/uikit.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/uikit@3.17.11/dist/js/uikit.min.js"></script>
+</head>
+<body>
+
+<div class="uk-container uk-margin-top">
+    <nav class="uk-navbar-container uk-margin-bottom" uk-navbar>
+        <div class="uk-navbar-left">
+            <a href="{% url 'main_page' %}" class="uk-button uk-button-default">
+                <span uk-icon="arrow-left"></span> Назад
+            </a>
+        </div>
+        <div class="uk-navbar-center">
+            <h2>{% if is_add %}Новый товар{% else %}Редактирование: {{ product.name }}{% endif %}</h2>
+        </div>
+    </nav>
+
+    {% if errors %}
+    <div class="uk-alert-danger" uk-alert>
+        <ul class="uk-list">
+            {% for error in errors %}<li>{{ error }}</li>{% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+
+    <div class="uk-card uk-card-default uk-card-body">
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+
+            <div class="uk-grid" uk-grid>
+                <div class="uk-width-1-3@m">
+                    <h3>Фото</h3>
+                    <div class="uk-flex uk-flex-center uk-margin">
+                        {% if product.photo %}
+                            <img src="{% static 'products/' %}{{ product.photo }}" style="max-height:200px">
+                        {% else %}
+                            <img src="{% static 'picture.png' %}" style="max-height:200px">
+                        {% endif %}
+                    </div>
+                    <div class="uk-margin">
+                        <label class="uk-form-label">Загрузить фото</label>
+                        <div uk-form-custom="target: true">
+                            <input type="file" name="photo" accept="image/*">
+                            <input class="uk-input" type="text" placeholder="Выберите файл" disabled>
+                        </div>
+                        <div class="uk-text-meta">Макс. размер 300x200</div>
+                    </div>
+                </div>
+
+                <div class="uk-width-2-3@m">
+                    <h3>Данные товара</h3>
+
+                    {% if not is_add %}
+                    <div class="uk-margin">
+                        <label class="uk-form-label">Артикул</label>
+                        <input class="uk-input" type="text" value="{{ product.article }}" disabled>
+                    </div>
+                    {% endif %}
+
+                    <div class="uk-margin">
+                        <label class="uk-form-label">Наименование *</label>
+                        <input class="uk-input" type="text" name="name" required
+                               value="{% if product.name %}{{ product.name }}{% endif %}">
+                    </div>
+
+                    <div class="uk-margin">
+                        <label class="uk-form-label">Категория *</label>
+                        <select class="uk-select" name="category" required>
+                            <option value="">Выберите</option>
+                            {% for cat in categories %}
+                            <option value="{{ cat.id }}" {% if product.category_id == cat.id %}selected{% endif %}>
+                                {{ cat.name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="uk-margin">
+                        <label class="uk-form-label">Описание</label>
+                        <textarea class="uk-textarea" name="description" rows="3">{% if product.description %}{{ product.description }}{% endif %}</textarea>
+                    </div>
+
+                    <div class="uk-margin">
+                        <label class="uk-form-label">Производитель *</label>
+                        <select class="uk-select" name="manufacturer" required>
+                            <option value="">Выберите</option>
+                            {% for man in manufacturers %}
+                            <option value="{{ man.id }}" {% if product.manufacturer_id == man.id %}selected{% endif %}>
+                                {{ man.name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="uk-margin">
+                        <label class="uk-form-label">Поставщик *</label>
+                        <select class="uk-select" name="supplier" required>
+                            <option value="">Выберите</option>
+                            {% for sup in suppliers %}
+                            <option value="{{ sup.id }}" {% if product.supplier_id == sup.id %}selected{% endif %}>
+                                {{ sup.name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="uk-grid-small" uk-grid>
+                        <div class="uk-width-1-3">
+                            <label class="uk-form-label">Цена *</label>
+                            <input class="uk-input" type="number" name="price" step="0.01" min="0.01" required
+                                   value="{% if product.price %}{{ product.price }}{% endif %}">
+                        </div>
+                        <div class="uk-width-1-3">
+                            <label class="uk-form-label">Ед. изм. *</label>
+                            <input class="uk-input" type="text" name="unit" required
+                                   value="{% if product.unit %}{{ product.unit }}{% endif %}">
+                        </div>
+                        <div class="uk-width-1-3">
+                            <label class="uk-form-label">Кол-во *</label>
+                            <input class="uk-input" type="number" name="stock" min="0" required
+                                   value="{% if product.stock %}{{ product.stock }}{% endif %}">
+                        </div>
+                    </div>
+
+                    <div class="uk-margin">
+                        <label class="uk-form-label">Скидка %</label>
+                        <input class="uk-input" type="number" name="discount" min="0" max="100"
+                               value="{% if product.discount %}{{ product.discount }}{% else %}0{% endif %}">
+                    </div>
+
+                    <div class="uk-margin-top">
+                        <button class="uk-button uk-button-primary" type="submit">
+                            {% if is_add %}Добавить{% else %}Сохранить{% endif %}
+                        </button>
+                        <a href="{% url 'main_page' %}" class="uk-button uk-button-default">Отмена</a>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+</body>
+</html>
